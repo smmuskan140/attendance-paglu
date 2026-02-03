@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Paglu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background: white;
+            padding: 20px;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.closed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #2e7d32;
+            margin-bottom: 20px;
+        }
+
+        .nav-section h4 {
+            font-size: 0.75em;
+            color: #999;
+            text-transform: uppercase;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-item, .nav-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            background: none;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 6px;
+            color: #333;
+            font-weight: 500;
+            font-size: 0.95em;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover, .nav-btn:hover {
+            background: #f0f0f0;
+            color: #2e7d32;
+        }
+
+        .nav-item.active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        /* MAIN CONTENT */
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            color: #2e7d32;
+        }
+
+        .header-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .tab-btn.active {
+            background: #2e7d32;
+            color: white;
+        }
+
+        /* TAB CONTENT */
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .tab-content.show {
+            display: block;
+        }
+
+        /* FORMS */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1em;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 12px 20px;
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #1b5e20;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* GRID */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .card h3 {
+            margin-bottom: 10px;
+            color: #2e7d32;
+        }
+
+        .card p {
+            color: #666;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .card-actions button {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.85em;
+        }
+
+        /* PROFILE */
+        .profile-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .profile-card {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .profile-card h3 {
+            margin-bottom: 15px;
+            color: #2e7d32;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                transform: none;
+            }
+
+            .sidebar.closed {
+                display: none;
+            }
+
+            .main {
+                margin-left: 0;
+                padding: 10px;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .tab-btn {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* EMPTY STATE */
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #2e7d32;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">📚 Paglu</div>
+        
+        <div class="nav-section">
+            <h4>Navigation</h4>
+            <button class="nav-item active" onclick="switchTab(0)">📊 Overview</button>
+            <button class="nav-item" onclick="switchTab(1)">👤 Profile</button>
+            <button class="nav-item" onclick="switchTab(2)">➕ Add Subject</button>
+            <button class="nav-item" onclick="switchTab(3)">📝 Notes</button>
+        </div>
+
+        <div class="nav-section">
+            <h4>Data Storage</h4>
+            <button class="nav-item" onclick="switchTab(4)">✓ Mark Attendance</button>
+            <button class="nav-item" onclick="switchTab(5)">📋 Assignments</button>
+            <button class="nav-item" onclick="switchTab(6)">📊 Marks</button>
+            <button class="nav-item" onclick="switchTab(7)">📁 Files</button>
+        </div>
+
+        <div class="nav-section">
+            <button class="nav-btn btn btn-secondary" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        
+        <div class="header">
+            <h1>Attendance Paglu</h1>
+            <div class="header-info" id="headerInfo">Welcome</div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(0)">Overview</button>
+            <button class="tab-btn" onclick="switchTab(1)">Profile</button>
+            <button class="tab-btn" onclick="switchTab(2)">Add Subject</button>
+            <button class="tab-btn" onclick="switchTab(3)">Notes</button>
+            <button class="tab-btn" onclick="switchTab(4)">Mark Attendance</button>
+            <button class="tab-btn" onclick="switchTab(5)">Assignments</button>
+            <button class="tab-btn" onclick="switchTab(6)">Marks</button>
+            <button class="tab-btn" onclick="switchTab(7)">Files</button>
+        </div>
+
+        <!-- TAB 0: OVERVIEW -->
+        <div class="tab-content show" id="tab-0">
+            <h2>Overview</h2>
+            <div id="overviewContent"></div>
+        </div>
+
+        <!-- TAB 1: PROFILE -->
+        <div class="tab-content" id="tab-1">
+            <h2>Profile</h2>
+            <div class="profile-section">
+                <div class="profile-card">
+                    <h3>Current Profile</h3>
+                    <p><strong>Name:</strong> <span id="profileName">-</span></p>
+                    <p><strong>Roll:</strong> <span id="profileRoll">-</span></p>
+                    <p><strong>Semester:</strong> <span id="profileSem">-</span></p>
+                    <p><strong>Credits:</strong> <span id="profileCredits">-</span></p>
+                </div>
+                <div class="profile-card">
+                    <h3>Edit Profile</h3>
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="editName">
+                    </div>
+                    <div class="form-group">
+                        <label>Roll Number</label>
+                        <input type="text" id="editRoll">
+                    </div>
+                    <div class="form-group">
+                        <label>Semester</label>
+                        <select id="editSem">
+                            <option value="1">1st</option>
+                            <option value="2">2nd</option>
+                            <option value="3">3rd</option>
+                            <option value="4">4th</option>
+                            <option value="5">5th</option>
+                            <option value="6">6th</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Credits</label>
+                        <input type="number" id="editCredits">
+                    </div>
+                    <button class="btn" onclick="saveProfile()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: ADD SUBJECT -->
+        <div class="tab-content" id="tab-2">
+            <h2>Add Subject</h2>
+            <div style="max-width: 500px;">
+                <div class="form-group">
+                    <label>Subject Name</label>
+                    <input type="text" id="subjectName" placeholder="e.g., Data Structures">
+                </div>
+                <div class="form-group">
+                    <label>Subject Code</label>
+                    <input type="text" id="subjectCode" placeholder="e.g., CS201">
+                </div>
+                <div class="form-group">
+                    <label>Faculty</label>
+                    <input type="text" id="faculty" placeholder="Faculty name">
+                </div>
+                <div class="form-group">
+                    <label>Total Classes</label>
+                    <input type="number" id="totalClasses" placeholder="e.g., 30">
+                </div>
+                <div class="form-group">
+                    <label>Required Attendance %</label>
+                    <input type="number" id="reqAttendance" placeholder="75" value="75">
+                </div>
+                <button class="btn" onclick="addSubject()">Add Subject</button>
+            </div>
+            <div id="subjectsList" style="margin-top: 30px;"></div>
+        </div>
+
+        <!-- TAB 3: NOTES -->
+        <div class="tab-content" id="tab-3">
+            <h2>Handwritten Notes</h2>
+            <div style="max-width: 500px;">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="noteTitle" placeholder="Note title">
+                </div>
+                <div class="form-group">
+                    <label>Content</label>
+                    <textarea id="noteContent" placeholder="Write your notes..."></textarea>
+                </div>
+                <button class="btn" onclick="createNote()">Create Note</button>
+            </div>
+            <div id="notesList" style="margin-top: 30px;"></div>
+        </div>
+
+        <!-- TAB 4: MARK ATTENDANCE -->
+        <div class="tab-content" id="tab-4">
+            <h2>Mark Attendance</h2>
+            <div style="max-width: 500px;">
+                <div class="form-group">
+                    <label>Subject</label>
+                    <select id="attSubject"></select>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="attDate">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="attStatus">
+                        <option value="present">Present</option>
+                        <option value="absent">Absent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="attNotes" placeholder="Optional notes..."></textarea>
+                </div>
+                <button class="btn" onclick="markAttendance()">Save Attendance</button>
+            </div>
+            <div id="attendanceList" style="margin-top: 30px;"></div>
+        </div>
+
+        <!-- TAB 5: ASSIGNMENTS -->
+        <div class="tab-content" id="tab-5">
+            <h2>Assignments</h2>
+            <div style="max-width: 500px;">
+                <div class="form-group">
+                    <label>Subject</label>
+                    <select id="assignSubject"></select>
+                </div>
+                <div class="form-group">
+                    <label>Assignment Name</label>
+                    <input type="text" id="assignName" placeholder="Assignment title">
+                </div>
+                <div class="form-group">
+                    <label>Due Date</label>
+                    <input type="date" id="assignDue">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="assignStatus">
+                        <option value="pending">Pending</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="addAssignment()">Add Assignment</button>
+            </div>
+            <div id="assignmentsList" style="margin-top: 30px;"></div>
+        </div>
+
+        <!-- TAB 6: MARKS -->
+        <div class="tab-content" id="tab-6">
+            <h2>Marks</h2>
+            <div style="max-width: 500px;">
+                <div class="form-group">
+                    <label>Subject</label>
+                    <select id="marksSubject"></select>
+                </div>
+                <div class="form-group">
+                    <label>Exam Type</label>
+                    <select id="examType">
+                        <option value="internal">Internal</option>
+                        <option value="external">External</option>
+                        <option value="midterm">Midterm</option>
+                        <option value="final">Final</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Marks Obtained</label>
+                    <input type="number" id="marksObtained" placeholder="Obtained marks">
+                </div>
+                <div class="form-group">
+                    <label>Total Marks</label>
+                    <input type="number" id="marksTotal" placeholder="100" value="100">
+                </div>
+                <button class="btn" onclick="addMarks()">Save Marks</button>
+            </div>
+            <div id="marksList" style="margin-top: 30px;"></div>
+        </div>
+
+        <!-- TAB 7: FILES -->
+        <div class="tab-content" id="tab-7">
+            <h2>File Storage</h2>
+            <div style="max-width: 500px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label>Upload Files</label>
+                    <input type="file" id="fileInput" multiple>
+                </div>
+                <button class="btn" onclick="uploadFiles()">Upload</button>
+            </div>
+            <div id="filesList"></div>
+        </div>
+    </div>
+
+    <!-- SETUP MODAL -->
+    <div class="modal show" id="setupModal">
+        <div class="modal-content">
+            <h2>Setup Your Profile</h2>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="setupName" placeholder="Your name">
+            </div>
+            <div class="form-group">
+                <label>Roll Number</label>
+                <input type="text" id="setupRoll" placeholder="Your roll number">
+            </div>
+            <div class="form-group">
+                <label>Semester</label>
+                <select id="setupSem">
+                    <option value="1">1st</option>
+                    <option value="2">2nd</option>
+                    <option value="3">3rd</option>
+                    <option value="4">4th</option>
+                    <option value="5">5th</option>
+                    <option value="6">6th</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Credits</label>
+                <input type="number" id="setupCredits" placeholder="24" value="24">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="setupProfile()">Start Tracking</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let student = null;
+        let db = {
+            subjects: [],
+            attendance: {},
+            assignments: [],
+            marks: [],
+            notes: [],
+            files: []
+        };
+
+        function init() {
+            const saved = localStorage.getItem('student');
+            const savedDb = localStorage.getItem('db');
+            
+            if (saved && savedDb) {
+                student = JSON.parse(saved);
+                db = JSON.parse(savedDb);
+                document.getElementById('setupModal').classList.remove('show');
+                updateUI();
+            }
+        }
+
+        function setupProfile() {
+            const name = document.getElementById('setupName').value.trim();
+            const roll = document.getElementById('setupRoll').value.trim();
+            const sem = document.getElementById('setupSem').value;
+            const credits = document.getElementById('setupCredits').value;
+
+            if (!name || !roll) {
+                alert('Please fill all fields!');
+                return;
+            }
+
+            student = { name, roll, sem, credits };
+            localStorage.setItem('student', JSON.stringify(student));
+            localStorage.setItem('db', JSON.stringify(db));
+            document.getElementById('setupModal').classList.remove('show');
+            updateUI();
+        }
+
+        function logout() {
+            if (confirm('Logout?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('headerInfo').textContent = student ? student.name : 'Welcome';
+            renderProfile();
+            renderOverview();
+            updateSubjectSelects();
+        }
+
+        function renderProfile() {
+            if (!student) return;
+            document.getElementById('profileName').textContent = student.name;
+            document.getElementById('profileRoll').textContent = student.roll;
+            document.getElementById('profileSem').textContent = student.sem;
+            document.getElementById('profileCredits').textContent = student.credits;
+            document.getElementById('editName').value = student.name;
+            document.getElementById('editRoll').value = student.roll;
+            document.getElementById('editSem').value = student.sem;
+            document.getElementById('editCredits').value = student.credits;
+        }
+
+        function saveProfile() {
+            const name = document.getElementById('editName').value.trim();
+            const roll = document.getElementById('editRoll').value.trim();
+            const sem = document.getElementById('editSem').value;
+            const credits = document.getElementById('editCredits').value;
+
+            if (!name || !roll) {
+                alert('Please fill all fields!');
+                return;
+            }
+
+            student = { name, roll, sem, credits };
+            localStorage.setItem('student', JSON.stringify(student));
+            renderProfile();
+            alert('Profile updated!');
+        }
+
+        function renderOverview() {
+            let html = '<h3>Your Subjects</h3>';
+            if (db.subjects.length === 0) {
+                html += '<div class="empty">No subjects added yet</div>';
+            } else {
+                html += '<div class="grid">';
+                db.subjects.forEach(s => {
+                    html += `<div class="card"><h3>${s.name}</h3><p>${s.code}</p><p>${s.faculty}</p></div>`;
+                });
+                html += '</div>';
+            }
+            document.getElementById('overviewContent').innerHTML = html;
+        }
+
+        function updateSubjectSelects() {
+            let options = '<option value="">Select Subject</option>';
+            db.subjects.forEach(s => {
+                options += `<option value="${s.id}">${s.name}</option>`;
+            });
+            document.getElementById('attSubject').innerHTML = options;
+            document.getElementById('assignSubject').innerHTML = options;
+            document.getElementById('marksSubject').innerHTML = options;
+        }
+
+        function addSubject() {
+            const name = document.getElementById('subjectName').value.trim();
+            const code = document.getElementById('subjectCode').value.trim();
+            const faculty = document.getElementById('faculty').value.trim();
+            const total = parseInt(document.getElementById('totalClasses').value);
+            const req = parseInt(document.getElementById('reqAttendance').value);
+
+            if (!name || !code || !faculty || !total) {
+                alert('Please fill all fields!');
+                return;
+            }
+
+            const subject = { id: Date.now(), name, code, faculty, total, req };
+            db.subjects.push(subject);
+            db.attendance[subject.id] = { present: 0, absent: 0 };
+
+            localStorage.setItem('db', JSON.stringify(db));
+            document.getElementById('subjectName').value = '';
+            document.getElementById('subjectCode').value = '';
+            document.getElementById('faculty').value = '';
+            document.getElementById('totalClasses').value = '';
+
+            renderOverview();
+            updateSubjectSelects();
+            renderSubjectsList();
+            alert('Subject added!');
+        }
+
+        function renderSubjectsList() {
+            let html = '<h3>Subjects List</h3>';
+            if (db.subjects.length === 0) {
+                html += '<p>No subjects</p>';
+            } else {
+                html += '<div class="grid">';
+                db.subjects.forEach(s => {
+                    html += `<div class="card"><h3>${s.name}</h3><p>${s.code} • ${s.faculty}</p><p>Total: ${s.total} classes</p><div class="card-actions"><button class="btn btn-secondary" onclick="deleteSubject(${s.id})">Delete</button></div></div>`;
+                });
+                html += '</div>';
+            }
+            document.getElementById('subjectsList').innerHTML = html;
+        }
+
+        function deleteSubject(id) {
+            if (confirm('Delete subject?')) {
+                db.subjects = db.subjects.filter(s => s.id !== id);
+                delete db.attendance[id];
+                localStorage.setItem('db', JSON.stringify(db));
+                renderOverview();
+                renderSubjectsList();
+                updateSubjectSelects();
+            }
+        }
+
+        function createNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+
+            if (!title || !content) {
+                alert('Please fill title and content!');
+                return;
+            }
+
+            const note = { id: Date.now(), title, content, date: new Date().toLocaleDateString() };
+            db.notes.push(note);
+            localStorage.setItem('db', JSON.stringify(db));
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            renderNotes();
+            alert('Note created!');
+        }
+
+        function renderNotes() {
+            let html = '<h3>Notes</h3>';
+            if (db.notes.length === 0) {
+                html += '<p>No notes</p>';
+            } else {
+                html += '<div class="grid">';
+                db.notes.forEach(n => {
+                    html += `<div class="card"><h3>${n.title}</h3><p>${n.content.substring(0, 100)}...</p><p style="font-size: 0.8em; color: #999;">${n.date}</p><div class="card-actions"><button class="btn btn-secondary" onclick="deleteNote(${n.id})">Delete</button></div></div>`;
+                });
+                html += '</div>';
+            }
+            document.getElementById('notesList').innerHTML = html;
+        }
+
+        function deleteNote(id) {
+            if (confirm('Delete note?')) {
+                db.notes = db.notes.filter(n => n.id !== id);
+                localStorage.setItem('db', JSON.stringify(db));
+                renderNotes();
+            }
+        }
+
+        function markAttendance() {
+            const subId = document.getElementById('attSubject').value;
+            const date = document.getElementById('attDate').value;
+            const status = document.getElementById('attStatus').value;
+
+            if (!subId || !date) {
+                alert('Please fill required fields!');
+                return;
+            }
+
+            const att = db.attendance[subId];
+            if (status === 'present') att.present++;
+            else att.absent++;
+
+            db.attendance[subId] = att;
+            localStorage.setItem('db', JSON.stringify(db));
+            document.getElementById('attSubject').value = '';
+            document.getElementById('attDate').value = '';
+            renderAttendance();
+            alert('Attendance marked!');
+        }
+
+        function renderAttendance() {
+            let html = '<h3>Attendance Records</h3>';
+            if (!db.subjects || db.subjects.length === 0) {
+                html += '<p>No subjects</p>';
+            } else {
+                html += '<div class="grid">';
+                db.subjects.forEach(s => {
+                    const att = db.attendance[s.id] || { present: 0, absent: 0 };
+                    const total = att.present + att.absent;
+                    const pct = total > 0 ? ((att.present / total) * 100).toFixed(1) : 0;
+                    html += `<div class="card"><h3>${s.name}</h3><p>Present: ${att.present}</p><p>Absent: ${att.absent}</p><p>Percentage: ${pct}%</p></div>`;
+                });
+                html += '</div>';
+            }
+            document.getElementById('attendanceList').innerHTML = html;
+        }
+
+        function addAssignment() {
+            const subId = document.getElementById('assignSubject').value;
+            const name = document.getElementById('assignName').value.trim();
+            const due = document.getElementById('assignDue').value;
+            const status = document.getElementById('assignStatus').value;
+
+            if (!subId || !name || !due) {
+                alert('Please fill required fields!');
+                return;
+            }
+
+            const assignment = { id: Date.now(), subId, name, due, status, created: new Date().toLocaleDateString() };
+            db.assignments.push(assignment);
+            localStorage.setItem('db', JSON.stringify(db));
+            document.getElementById('assignSubject').value = '';
+            document.getElementById('assignName').value = '';
+            document.getElementById('assignDue').value = '';
+            renderAssignments();
+            alert('Assignment added!');
+        }
+
+        function renderAssignments() {
+            let html = '<h3>Assignments</h3>';
+            if (db.assignments.length === 0) {
+                html += '<p>No assignments</p>';
+            } else {
+                html += '<div class="grid">';
+                db.assignments.forEach(a => {
+                    html += `<div class="card"><h3>${a.name}</h3><p>Due: ${a.due}</p><p>Status: ${a.status}</p><div class="card-actions"><button class="btn btn-secondary" onclick="deleteAssignment(${a.id})">Delete</button></div></div>`;
+                });
+                html += '</div>';
+            }
+            document.getElementById('assignmentsList').innerHTML = html;
+        }
+
+        function deleteAssignment(id) {
+            if (confirm('Delete assignment?')) {
+                db.assignments = db.assignments.filter(a => a.id !== id);
+                localStorage.setItem('db', JSON.stringify(db));
+                renderAssignments();
+            }
+        }
+
+        function addMarks() {
+            const subId = document.getElementById('marksSubject').value;
+            const examType = document.getElementById('examType').value;
+            const obtained = parseInt(document.getElementById('marksObtained').value);
+            const total = parseInt(document.getElementById('marksTotal').value);
+
+            if (!subId || !obtained || !total) {
+                alert('Please fill all fields!');
+                return;
+            }
+
+            const marks = { id: Date.now(), subId, examType, obtained, total, percentage: ((obtained / total) * 100).toFixed(1), created: new Date().toLocaleDateString() };
+            db.marks.push(marks);
+            localStorage.setItem('db', JSON.stringify(db));
+            document.getElementById('marksSubject').value = '';
+            document.getElementById('marksObtained').value = '';
+            renderMarks();
+            alert('Marks saved!');
+        }
+
+        function renderMarks() {
+            let html = '<h3>Marks</h3>';
+            if (db.marks.length === 0) {
+                html += '<p>No marks recorded</p>';
+            } else {
+                html += '<div class="grid">';
+                db.marks.forEach(m => {
+                    html += `<div class="card"><h3>${m.examType.toUpperCase()}</h3><p>${m.obtained}/${m.total}</p><p>${m.percentage}%</p><div class="card-actions"><button class="btn btn-secondary" onclick="deleteMarks(${m.id})">Delete</button></div></div>`;
+                });
+                html += '</div>';
+            }
+            document.getElementById('marksList').innerHTML = html;
+        }
+
+        function deleteMarks(id) {
+            if (confirm('Delete marks?')) {
+                db.marks = db.marks.filter(m => m.id !== id);
+                localStorage.setItem('db', JSON.stringify(db));
+                renderMarks();
+            }
+        }
+
+        function uploadFiles() {
+            const input = document.getElementById('fileInput');
+            const files = input.files;
+
+            if (files.length === 0) {
+                alert('Please select files!');
+                return;
+            }
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const f = { id: Date.now() + Math.random(), name: file.name, size: file.size, data: e.target.result, uploaded: new Date().toLocaleDateString() };
+                    db.files.push(f);
+                    localStorage.setItem('db', JSON.stringify(db));
+                    renderFiles();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            input.value = '';
+            alert('Files uploaded!');
+        }
+
+        function renderFiles() {
+            let html = '<h3>Files</h3>';
+            if (db.files.length === 0) {
+                html += '<p>No files</p>';
+            } else {
+                html += '<div class="grid">';
+                db.files.forEach(f => {
+                    html += `<div class="card"><h3>📄 ${f.name}</h3><p>${(f.size / 1024).toFixed(1)} KB</p><p>${f.uploaded}</p><div class="card-actions"><button class="btn" onclick="downloadFile(${f.id})">Download</button><button class="btn btn-secondary" onclick="deleteFile(${f.id})">Delete</button></div></div>`;
+                });
+                html += '</div>';
+            }
+            document.getElementById('filesList').innerHTML = html;
+        }
+
+        function downloadFile(id) {
+            const file = db.files.find(f => f.id === id);
+            if (file) {
+                const link = document.createElement('a');
+                link.href = file.data;
+                link.download = file.name;
+                link.click();
+            }
+        }
+
+        function deleteFile(id) {
+            if (confirm('Delete file?')) {
+                db.files = db.files.filter(f => f.id !== id);
+                localStorage.setItem('db', JSON.stringify(db));
+                renderFiles();
+            }
+        }
+
+        function switchTab(index) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(`tab-${index}`).classList.add('show');
+            document.querySelectorAll('.tab-btn')[index].classList.add('active');
+            document.querySelectorAll('.nav-item')[index].classList.add('active');
+
+            if (index === 0) renderOverview();
+            if (index === 2) renderSubjectsList();
+            if (index === 3) renderNotes();
+            if (index === 4) renderAttendance();
+            if (index === 5) renderAssignments();
+            if (index === 6) renderMarks();
+            if (index === 7) renderFiles();
+
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.add('closed');
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('closed');
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
